@@ -1,95 +1,138 @@
-import Image from 'next/image'
-import styles from './page.module.css'
+'use client'
+
+import {useEffect, useMemo, useState} from 'react';
+
+const CreateForm = (props) => {
+    const selectedUser = useMemo(() => props.user, [props]);
+    const [newUserLogin, setNewUserLogin] = useState('')
+    const [newUserUrl, setNewUserUrl] = useState('')
+    
+    const handleUserLoginChange = (value) => {
+        setNewUserLogin(value)
+    }
+    
+    const handleUserUrlChange = (value) => {
+        setNewUserUrl(value)
+    }
+    
+    const saveNewUser = () => {
+        const newObj = {
+            id: props.data.length + 1,
+            login: newUserLogin, url: newUserUrl
+        }
+        const newArr = [...props.data, newObj]
+        props.setData(newArr)
+        props.setCreateNewUser(false)
+    }
+    
+    return (
+        <div>
+            <h4>Login:</h4>
+            <input style={{marginRight: '10px'}} onChange={(e) => handleUserLoginChange(e.target.value)} type="text"
+                   value={newUserLogin}></input>
+            <h4>Url:</h4>
+            <input style={{marginRight: '10px'}} onChange={(e) => handleUserUrlChange(e.target.value)} type="text"
+                   value={newUserUrl}></input>
+            <button onClick={() => saveNewUser()}>Save</button>
+        </div>
+    )
+}
+
+const EditForm = (props) => {
+    const selectedUser = useMemo(() => props.user, [props]);
+    const [selectedUserLogin, setSelectedUserLogin] = useState(null)
+    const [selectedUserUrl, setSelectedUserUrl] = useState(null)
+    
+    useEffect(() => {
+        setSelectedUserLogin(selectedUser.login)
+        setSelectedUserUrl(selectedUser.url)
+    }, [selectedUser]);
+    
+    const handleUserLoginChange = (value) => {
+        setSelectedUserLogin(value)
+    }
+    
+    const handleUserUrlChange = (value) => {
+        setSelectedUserUrl(value)
+    }
+    
+    const handleEditSave = () => {
+        const updatedArr = props.data.map(a => {
+            const returnValue = {...a};
+            
+            if (a.id == selectedUser.id) {
+                returnValue.login = selectedUserLogin;
+                returnValue.url = selectedUserUrl;
+            }
+            
+            return returnValue
+        })
+        
+        props.setData(updatedArr);
+        props.setSelectedUser(null)
+    }
+    
+    return (
+        <div>
+            <input style={{marginRight: '10px'}} onChange={(e) => handleUserLoginChange(e.target.value)} type="text"
+                   value={selectedUserLogin}></input>
+            <input style={{marginRight: '10px'}} onChange={(e) => handleUserUrlChange(e.target.value)} type="text"
+                   value={selectedUserUrl}></input>
+            <button onClick={() => handleEditSave()}>Save</button>
+        </div>
+    )
+}
 
 export default function Home() {
-  return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.tsx</code>
-        </p>
+    const [data, setData] = useState([])
+    const [selectedUser, setSelectedUser] = useState(null)
+    const [createNewUser, setCreateNewUser] = useState(false)
+    
+    useEffect(() => getData(), [])
+    const getData = async () => {
+        const res = await fetch('https://api.github.com/users');
+        const jsonData = await res.json();
+        setData(jsonData);
+    }
+    
+    const handleUserClick = (user) => {
+        setSelectedUser(user);
+    }
+    
+    const handleCreateNewUser = () => {
+        setCreateNewUser(true);
+    }
+    
+    return (
         <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+            <div style={{float: 'left', width: '50%'}}>
+                <ul>
+                    {data.map((el) => {
+                        return (
+                            <li key={el.id}>
+                                <span style={{marginRight: '10px'}}>{el.login}</span>
+                                <a href={el.url}>
+                                    <span style={{marginRight: '10px'}}>{el.url}</span>
+                                </a>
+                                <span style={{marginRight: '10px'}}>{Math.floor(Math.random() * 16) + 18}</span>
+                                <button onClick={() => handleUserClick(el)}>Edit</button>
+                            </li>
+                        )
+                    })
+                    }
+                </ul>
+                <button onClick={() => handleCreateNewUser()}>Add</button>
+                {createNewUser ?
+                    <CreateForm data={data} setData={setData} setCreateNewUser={setCreateNewUser} set/> : null}
+            </div>
+            <div style={{float: 'left', width: '50%'}}>
+                {selectedUser ? <EditForm user={selectedUser}
+                                          setSelectedUser={setSelectedUser}
+                                          data={data}
+                                          setData={setData}/> : null}
+            </div>
+        
         </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+    
+    )
 }
