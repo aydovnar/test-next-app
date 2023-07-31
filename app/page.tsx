@@ -3,7 +3,6 @@
 import {useEffect, useMemo, useState} from 'react';
 
 const CreateForm = (props) => {
-    const selectedUser = useMemo(() => props.user, [props]);
     const [newUserLogin, setNewUserLogin] = useState('')
     const [newUserUrl, setNewUserUrl] = useState('')
     
